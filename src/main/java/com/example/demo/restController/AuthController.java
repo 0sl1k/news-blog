@@ -8,6 +8,8 @@ import com.example.demo.model.Repositiries.RoleRepo;
 import com.example.demo.model.Repositiries.UserRepo;
 import com.example.demo.model.Role;
 import com.example.demo.model.User;
+import com.example.demo.model.dto.LogInDto;
+import com.example.demo.model.dto.SignUpDto;
 import com.example.demo.service.UserDetailsImpl;
 import lombok.Getter;
 import lombok.Setter;
@@ -29,22 +31,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Getter
-@Setter
-class LoginDTO{
-    private String username;
-    private String password;
 
-}
-@Getter
-@Setter
-class SignUpDTO{
-    private String email;
-    private String username;
-    private String password;
-    private Set<String> role;
-
-}
 
 
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -63,7 +50,7 @@ public class AuthController {
     JwtUtils jwtUtils;
 
      @PostMapping("/signIn")
-    public ResponseEntity<?> authenticateUser(@RequestBody LoginDTO sign){
+    public ResponseEntity<?> authenticateUser(@RequestBody LogInDto sign){
          Authentication authentication = authenticationManager
                  .authenticate(new UsernamePasswordAuthenticationToken(sign.getUsername(),sign.getPassword()));
          SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -82,12 +69,19 @@ public class AuthController {
     }
 
     @PostMapping("/signUp")
-    public ResponseEntity<?> registration(@RequestBody SignUpDTO sign){
+    public ResponseEntity<?> registration(@RequestBody SignUpDto sign){
         User user = new User();
         user.setUsername(sign.getUsername());
-        user.setEmail(sign.getEmail());
-        user.setPassword(bCryptPasswordEncoder.encode(sign.getPassword()));
-
+        if (userRepo.existsUserByEmail(sign.getEmail())){
+            return new ResponseEntity<>("Error:Account with this email already exists",HttpStatus.BAD_REQUEST);
+        }else {
+            user.setEmail(sign.getEmail());
+        }
+        if (sign.getPassword().length()<8){
+            return new ResponseEntity<>("Error: This password short",HttpStatus.BAD_REQUEST);
+        }else {
+            user.setPassword(bCryptPasswordEncoder.encode(sign.getPassword()));
+        }
         Set<String> strRoles = sign.getRole();
         Set<Role> roles = new HashSet<>();
 
