@@ -22,9 +22,6 @@ public class JwtUtils {
     @Value("${glek.app.jwtSecret}")
     private String jwtSecret;
 
-    @Value("${glek.app.jwtExpirationMs}")
-    private int jwtExpirationMs;
-
     @Value("${glek.app.jwtCookieName}")
     private String jwtCookie;
 
@@ -42,7 +39,7 @@ public class JwtUtils {
     }
     public ResponseCookie generateJwtCookie(UserDetailsImpl userDetails){
         String jwt = generateTokenFromUsername(userDetails.getUsername());
-        ResponseCookie cookie = ResponseCookie.from(jwtCookie,jwt).path("/api").maxAge(24*60*60).httpOnly(true).build();
+        ResponseCookie cookie = ResponseCookie.from(jwtCookie,jwt).path("/api").httpOnly(true).build();
         return cookie;
     }
     private Key key() {
@@ -74,7 +71,7 @@ public class JwtUtils {
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
+                .setExpiration(null)
                 .signWith(key(), SignatureAlgorithm.HS256)
                 .compact();
     }
